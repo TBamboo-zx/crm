@@ -6,11 +6,13 @@ import com.zx.crm.settings.service.impl.UserServiceImpl;
 import com.zx.crm.utils.MD5Util;
 import com.zx.crm.utils.PrintJson;
 import com.zx.crm.utils.ServiceFactory;
+import org.apache.ibatis.session.SqlSession;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -18,8 +20,6 @@ import java.util.Map;
 public class UserController extends HttpServlet {
     @Override
     protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-
-        System.out.println("进入到用户控制器");
 
         String path = request.getServletPath();
         System.out.println(path);
@@ -34,15 +34,12 @@ public class UserController extends HttpServlet {
 
     private void login(HttpServletRequest request, HttpServletResponse response) {
 
-        System.out.println("进入到验证登录操作");
-
         String loginAct = request.getParameter("loginAct");
         String loginPwd = request.getParameter("loginPwd");
         //将密码的明文装换成MD5的密文形式
         loginPwd = MD5Util.getMD5(loginPwd);
         //接受浏览器端的ip地址
         String ip = request.getRemoteAddr();
-        System.out.println("---------ip=" + ip);
 
         //未来业务层开发，统一使用代理类形态接口对象
         //利用动态代理生成了一个与持久层打交道的服务层对象。
@@ -57,7 +54,7 @@ public class UserController extends HttpServlet {
             User user = us.login(loginAct,loginPwd,ip);
 
             //允许到这表示没有抛异常  就代表验证成功。
-            request.setAttribute("user",user);
+          request.getSession().setAttribute("user",user);
             //需要给前端返回，前面判断的success 和msg。
             PrintJson.printJsonFlag(response,true);
 
@@ -65,8 +62,8 @@ public class UserController extends HttpServlet {
         }catch (Exception e){
             //运行到这表示出现异常，说明业务层为我们验证登录失败，为controller抛出异常
             //表示登录失败,需要传success 和 msg
+            e.printStackTrace();
             String msg =e.getMessage();
-            System.out.println("zhixinfasdfdsdddddfffffffffffff");
             /*
                 我们现在作为controller，需要ajax请求提供多项信息
 

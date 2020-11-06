@@ -57,7 +57,6 @@ public class PrintJson {
 		ObjectMapper om = new ObjectMapper();
 		try {
 			String json = om.writeValueAsString(obj);
-			System.out.println(json);
 			response.getWriter().print(json);
 		} catch (JsonGenerationException e) {
 			e.printStackTrace();

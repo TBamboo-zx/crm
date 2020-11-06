@@ -22,7 +22,7 @@ String basePath = request.getScheme() + "://" + request.getServerName() + ":" + 
 
 			//为登录按钮绑定事件，执行登录操作
 			$("#submitBtn").click(function () {
-				alert("click");
+
 				login();
 			})
 
@@ -37,7 +37,6 @@ String basePath = request.getScheme() + "://" + request.getServerName() + ":" + 
 		})
 		//普通自定义的function方法，一定要写在$(function(){})的外面。
 		function login() {
-			alert("登录操作");
 			//验证账号密码不能为空；
 			//将文本中的做有空格去掉，使用$.trim(文本)
 			var loginAct = $.trim($("#loginAct").val());
@@ -64,33 +63,23 @@ String basePath = request.getScheme() + "://" + request.getServerName() + ":" + 
 							"success" : true/false //验证是否成功了
 							 "msg":"哪里错了"
 							 }
-
-
 					*/
 					alert(data.success);
 					if(data.success){
 						//验证成功跳转到欢迎页
-						window.location.href="workbench/index.html";
+						window.location.href="workbench/index.jsp";
 
 					//如果验证失败
 					}else {
 						//这里不知道哪里错了，所以需要从后台拿错误信息
 						$("#msg").html(data.msg);
 					}
-
-
-
-
-
 				}
 
 
 			})
 
-
-
 			//去后台验证登录
-
 
 		}
 
@@ -111,7 +100,7 @@ String basePath = request.getScheme() + "://" + request.getServerName() + ":" + 
 			<div class="page-header">
 				<h1>登录</h1>
 			</div>
-			<form action="workbench/index.html" class="form-horizontal" role="form">
+			<form action="workbench/index.jsp" class="form-horizontal" role="form">
 				<div class="form-group form-group-lg">
 					<div style="width: 350px;">
 						<input class="form-control" type="text" placeholder="用户名" id="loginAct">
