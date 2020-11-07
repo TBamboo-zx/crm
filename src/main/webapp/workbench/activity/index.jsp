@@ -16,14 +16,130 @@ String basePath = request.getScheme() + "://" + request.getServerName() + ":" + 
 <script type="text/javascript" src="jquery/bootstrap-datetimepicker-master/js/bootstrap-datetimepicker.js"></script>
 <script type="text/javascript" src="jquery/bootstrap-datetimepicker-master/locale/bootstrap-datetimepicker.zh-CN.js"></script>
 
+	<link rel="stylesheet" type="text/css" href="jquery/bs_pagination/jquery.bs_pagination.min.css">
+	<script type="text/javascript" src="jquery/bs_pagination/jquery.bs_pagination.min.js"></script>
+	<script type="text/javascript" src="jquery/bs_pagination/en.js"></script>
+
 <script type="text/javascript">
 
 	$(function(){
-		
-		
+
+		$("#addBtn").click(function () {
+			/*
+			给time类的表单元素添加日历标签
+
+			*/
+			$(".time").datetimepicker({
+				minView: "month",
+				language:  'zh-CN',
+				format: 'yyyy-mm-dd',
+				autoclose: true,
+				todayBtn: true,
+				pickerPosition: "bottom-left"
+			});
+
+			//在叫出模态窗口的之前，我们需要访问数据库给下拉窗口
+			$.ajax({
+				url:"workbench/activity/getUserList.do",
+				type:"get",
+				dataType:"json",
+				success:function (data) {
+					/*
+						这边我们需要的是所有的User的所有信息所以应该是一个（尽管现在我们只需要名字）
+						List<User> uList
+						data
+						 	[{用户1}，{用户2} ]
+					*/
+					var html ="<option></option>";
+					//遍历出来的每一个n，就是每一个user对象
+					$.each(data,function (i,n) {
+						html +="<option value='"+n.id+"'>"+n.name+"</option>";
+					})
+
+					$("#actOwner").html(html);
+					//将当前登录的用户设置为下拉框默认选项
+					var userId="${user.id}";
+					$("#actOwner").val(userId);
+
+
+					$("#createActivityModal").modal("show");
+
+				}
+			})
+			//找到提交按钮：save btn; 经行表单提交操作。
+			$("#saveBtn").click(function () {
+				$.ajax({
+					url:"workbench/activity/save.do",
+					data:{
+						actOwner:$("#actOwner").val(), //活动创建者 对于User表
+						actName: $("#actName").val(),//活动创建者的名字
+						actStartDate:$("#actStartDate").val(),  //开始日期
+						actEndDate: $("#actEndDate").val(),//结束日期
+						actCost: $("#actCost").val(), //花费
+						actDescription: $("#actDescription").val() //描述
+					},
+					type:"get",
+					dataType :"json",
+					success :function (data) {
+						//添加操作 只需要返回是否成功：{”success“:true}
+						if(data.success){
+							//关闭窗口，
+							$("#createActivityModal").modal("hide");
+							//刷新表单
+						}else {
+							alert("提交失败")
+						}
+					}
+				})
+			})
+		})
+
+	pageList(1,2)
 		
 	});
-	
+	//分页查询方法
+	function pageList(pageNo,pageSize){
+		$.ajax({
+			url:"workbench/activity/pageList.do",
+			data:{
+				"pageNo":pageNo,
+				"pageSize":pageSize,
+				"searchName": $.trim($("#searchName").val()),
+				"searchOwner":$.trim($("#searchOwner").val()),
+				"searchStartDate":$.trim($("#searchStartDate").val()),
+				"searchEndDate":$.trim($("#searchEndDate").val())
+			},
+			type:"get",
+			dataType :"json",
+			success :function (data) {
+				/*
+				返回值应该是一个activityList 然后加一个查询的条数，
+				{“total”:100,"dataList":[{市场活动1},{}] }
+				*/
+				var html = "";
+				$.each(data.pageList,function (i,n) {
+
+					html +='<tr class="active">'
+					html +='<td><input type="checkbox" value="'+n.id+'"/></td> '
+					html +='<td><a style="text-decoration: none; cursor: pointer;" onclick="window.location.href=\'detail.jsp\';">'+n.name+'</a></td>'
+					html +='<td>'+n.owner+'</td>'
+					html +='<td>'+n.startDate+'</td>'
+					html +='<td>'+n.endDate+'</td>'
+					html +='</tr>'
+
+
+				})
+				$("#PageListBody").html(html);
+
+
+			}
+
+
+		})
+
+
+
+	}
 </script>
 </head>
 <body>
@@ -45,39 +161,37 @@ String basePath = request.getScheme() + "://" + request.getServerName() + ":" + 
 						<div class="form-group">
 							<label for="create-marketActivityOwner" class="col-sm-2 control-label">所有者<span style="font-size: 15px; color: red;">*</span></label>
 							<div class="col-sm-10" style="width: 300px;">
-								<select class="form-control" id="create-marketActivityOwner">
-								  <option>zhangsan</option>
-								  <option>lisi</option>
-								  <option>wangwu</option>
+								<select class="form-control" id="actOwner">
+
 								</select>
 							</div>
                             <label for="create-marketActivityName" class="col-sm-2 control-label">名称<span style="font-size: 15px; color: red;">*</span></label>
                             <div class="col-sm-10" style="width: 300px;">
-                                <input type="text" class="form-control" id="create-marketActivityName">
+                                <input type="text" class="form-control" id="actName">
                             </div>
 						</div>
 						
 						<div class="form-group">
 							<label for="create-startTime" class="col-sm-2 control-label">开始日期</label>
 							<div class="col-sm-10" style="width: 300px;">
-								<input type="text" class="form-control" id="create-startTime">
+								<input type="text" class="form-control time" id="actStartDate">
 							</div>
 							<label for="create-endTime" class="col-sm-2 control-label">结束日期</label>
 							<div class="col-sm-10" style="width: 300px;">
-								<input type="text" class="form-control" id="create-endTime">
+								<input type="text" class="form-control time" id="actEndDate">
 							</div>
 						</div>
                         <div class="form-group">
 
                             <label for="create-cost" class="col-sm-2 control-label">成本</label>
                             <div class="col-sm-10" style="width: 300px;">
-                                <input type="text" class="form-control" id="create-cost">
+                                <input type="text" class="form-control" id="actCost">
                             </div>
                         </div>
 						<div class="form-group">
 							<label for="create-describe" class="col-sm-2 control-label">描述</label>
 							<div class="col-sm-10" style="width: 81%;">
-								<textarea class="form-control" rows="3" id="create-describe"></textarea>
+								<textarea class="form-control" rows="3" id="actDescription"></textarea>
 							</div>
 						</div>
 						
@@ -86,7 +200,7 @@ String basePath = request.getScheme() + "://" + request.getServerName() + ":" + 
 				</div>
 				<div class="modal-footer">
 					<button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
-					<button type="button" class="btn btn-primary" data-dismiss="modal">保存</button>
+					<button type="button" class="btn btn-primary" id="saveBtn">保存</button>
 				</div>
 			</div>
 		</div>
@@ -176,14 +290,14 @@ String basePath = request.getScheme() + "://" + request.getServerName() + ":" + 
 				  <div class="form-group">
 				    <div class="input-group">
 				      <div class="input-group-addon">名称</div>
-				      <input class="form-control" type="text">
+				      <input class="form-control" type="text" id="searchName">
 				    </div>
 				  </div>
 				  
 				  <div class="form-group">
 				    <div class="input-group">
 				      <div class="input-group-addon">所有者</div>
-				      <input class="form-control" type="text">
+				      <input class="form-control" type="text" id="searchOwner">
 				    </div>
 				  </div>
 
@@ -191,17 +305,17 @@ String basePath = request.getScheme() + "://" + request.getServerName() + ":" + 
 				  <div class="form-group">
 				    <div class="input-group">
 				      <div class="input-group-addon">开始日期</div>
-					  <input class="form-control" type="text" id="startTime" />
+					  <input class="form-control" type="text" id="searchStartTime" />
 				    </div>
 				  </div>
 				  <div class="form-group">
 				    <div class="input-group">
 				      <div class="input-group-addon">结束日期</div>
-					  <input class="form-control" type="text" id="endTime">
+					  <input class="form-control" type="text" id="searchEndTime">
 				    </div>
 				  </div>
 				  
-				  <button type="submit" class="btn btn-default">查询</button>
+				  <button type="button"  id="searchBtn" class="btn btn-default">查询</button>
 				  
 				</form>
 			</div>
@@ -219,7 +333,7 @@ String basePath = request.getScheme() + "://" + request.getServerName() + ":" + 
 
 					-->
 				  <button type="button" class="btn btn-primary" id="addBtn"><span class="glyphicon glyphicon-plus"></span> 创建</button>
-				  <button type="button" class="btn btn-default" data-toggle="modal" data-target="#editActivityModal"><span class="glyphicon glyphicon-pencil"></span> 修改</button>
+				  <button type="button" class="btn btn-default" id="editBtn"><span class="glyphicon glyphicon-pencil"></span> 修改</button>
 				  <button type="button" class="btn btn-danger"><span class="glyphicon glyphicon-minus"></span> 删除</button>
 				</div>
 				
@@ -235,8 +349,8 @@ String basePath = request.getScheme() + "://" + request.getServerName() + ":" + 
 							<td>结束日期</td>
 						</tr>
 					</thead>
-					<tbody>
-						<tr class="active">
+					<tbody id="PageListBody">
+						<%--<tr class="active">
 							<td><input type="checkbox" /></td>
 							<td><a style="text-decoration: none; cursor: pointer;" onclick="window.location.href='detail.jsp';">发传单</a></td>
                             <td>zhangsan</td>
@@ -249,47 +363,15 @@ String basePath = request.getScheme() + "://" + request.getServerName() + ":" + 
                             <td>zhangsan</td>
                             <td>2020-10-10</td>
                             <td>2020-10-20</td>
-                        </tr>
+                        </tr>--%>
 					</tbody>
 				</table>
 			</div>
 			
-			<div style="height: 50px; position: relative;top: 30px;">
-				<div>
-					<button type="button" class="btn btn-default" style="cursor: default;">共<b>50</b>条记录</button>
-				</div>
-				<div class="btn-group" style="position: relative;top: -34px; left: 110px;">
-					<button type="button" class="btn btn-default" style="cursor: default;">显示</button>
-					<div class="btn-group">
-						<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
-							10
-							<span class="caret"></span>
-						</button>
-						<ul class="dropdown-menu" role="menu">
-							<li><a href="#">20</a></li>
-							<li><a href="#">30</a></li>
-						</ul>
-					</div>
-					<button type="button" class="btn btn-default" style="cursor: default;">条/页</button>
-				</div>
-				<div style="position: relative;top: -88px; left: 285px;">
-					<nav>
-						<ul class="pagination">
-							<li class="disabled"><a href="#">首页</a></li>
-							<li class="disabled"><a href="#">上一页</a></li>
-							<li class="active"><a href="#">1</a></li>
-							<li><a href="#">2</a></li>
-							<li><a href="#">3</a></li>
-							<li><a href="#">4</a></li>
-							<li><a href="#">5</a></li>
-							<li><a href="#">下一页</a></li>
-							<li class="disabled"><a href="#">末页</a></li>
-						</ul>
-					</nav>
-				</div>
-			</div>
+			<div style="height: 50px; position: relative;top: 30px;" id="activityPage">
+
 			
-		</div>
+		   </div>
 		
 	</div>
 </body>

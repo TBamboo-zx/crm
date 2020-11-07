@@ -54,7 +54,7 @@ public class UserController extends HttpServlet {
             User user = us.login(loginAct,loginPwd,ip);
 
             //允许到这表示没有抛异常  就代表验证成功。
-          request.getSession().setAttribute("user",user);
+            request.getSession().setAttribute("user",user);
             //需要给前端返回，前面判断的success 和msg。
             PrintJson.printJsonFlag(response,true);
 
